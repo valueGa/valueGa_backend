@@ -1,8 +1,8 @@
 module.exports = (sequelize, Sequelize) => {
-  const USER_TEMPLATE = sequelize.define(
-    'USER_TEMPLATES',
+  const USER_TEMPLATE_TEMPORARY = sequelize.define(
+    'USER_TEMPLATE_TEMPORARIES',
     {
-      template_name: {
+      template_tmp_id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -21,7 +21,13 @@ module.exports = (sequelize, Sequelize) => {
           key: 'stock_id',
         },
       },
+      template_name: {
+        type: Sequelize.STRING(20),
+      },
       created_date: {
+        type: Sequelize.DATE,
+      },
+      updated_date: {
         type: Sequelize.DATE,
       },
       excel_data: {
@@ -33,5 +39,5 @@ module.exports = (sequelize, Sequelize) => {
     }
   );
 
-  return USER_TEMPLATE;
+  return USER_TEMPLATE_TEMPORARY;
 };
