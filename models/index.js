@@ -1,10 +1,11 @@
 const dbConfig = require('../config/db.config');
 
 const Sequelize = require('sequelize');
+
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   dialect: dbConfig.dialect,
-  operatorsAliases: false,
+  // operatorsAliases: false,
 
   pool: {
     max: dbConfig.pool.max,
@@ -53,5 +54,9 @@ db.USER_TEMPLATE_TEMPORARIES.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
 
 db.TEMPLATES.hasMany(db.VALUE_BOARDS, { foreignKey: 'template_id' });
 db.VALUE_BOARDS.belongsTo(db.TEMPLATES, { foreignKey: 'template_id' });
+
+db.sequelize.sync({ force: false }).then(() => {
+  console.log('DB 연결 완료');
+});
 
 module.exports = db;

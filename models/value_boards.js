@@ -1,29 +1,44 @@
 module.exports = (sequelize, Sequelize) => {
-  const ValueBoard = sequelize.define(
+  const VALUE_BOARD = sequelize.define(
     'VALUE_BOARDS',
     {
+      board_id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
       stock_id: {
-        type: Sequelize.STRING(8),
+        type: Sequelize.INTEGER,
         references: {
           model: 'STOCKS',
-          key: 'stock_code',
+          key: 'stock_id',
         },
       },
       user_id: {
-        type: Sequelize.STRING(30),
+        type: Sequelize.INTEGER,
         references: {
           model: 'USERS',
-          key: 'email',
+          key: 'user_id',
         },
       },
-      posted_date: {
+      template_id: {
+        type: Sequelize.STRING(20),
+        references: {
+          model: 'TEMPLATES',
+          key: 'template_id',
+        },
+      },
+      created_date: {
+        type: Sequelize.DATE,
+      },
+      updated_date: {
         type: Sequelize.DATE,
       },
       target_price: {
         type: Sequelize.INTEGER,
       },
       value_potential: {
-        type: Sequelize.STRING(10),
+        type: Sequelize.FLOAT,
       },
     },
     {
@@ -31,5 +46,5 @@ module.exports = (sequelize, Sequelize) => {
     }
   );
 
-  return ValueBoard;
+  return VALUE_BOARD;
 };
