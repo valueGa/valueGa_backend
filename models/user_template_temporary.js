@@ -24,12 +24,6 @@ module.exports = (sequelize, Sequelize) => {
       template_name: {
         type: Sequelize.STRING(20),
       },
-      created_date: {
-        type: Sequelize.DATE,
-      },
-      updated_date: {
-        type: Sequelize.DATE,
-      },
       excel_data: {
         type: Sequelize.BLOB,
       },
