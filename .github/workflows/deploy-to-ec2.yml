@@ -36,7 +36,7 @@ jobs:
                   key: ${{ secrets.EC2_KEY }}
                   port: 22
                   source: '.'
-                  target: '/home/ubuntu/backend'
+                  target: '/home/ubuntu/valueGa-BE'
 
             - name: Execute remote commands via SSH
               uses: appleboy/ssh-action@master
@@ -53,3 +53,4 @@ jobs:
                       # Navigate to the application directory
                       cd /home/ubuntu/valueGa-BE
                       npm install
+                      pm2 start server.js
