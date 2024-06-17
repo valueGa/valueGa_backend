@@ -3,7 +3,7 @@ module.exports = (sequelize, Sequelize) => {
     'STOCKS',
     {
       stock_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(6),
         primaryKey: true,
       },
       stock_name: {
@@ -11,6 +11,7 @@ module.exports = (sequelize, Sequelize) => {
       },
       target_price: {
         type: Sequelize.INTEGER,
+        defaultValue: 0,
       },
     },
     {

@@ -12,13 +12,17 @@ module.exports = (sequelize, Sequelize) => {
         references: {
           model: 'USERS',
           key: 'user_id',
+          onDelete: 'SET NULL',
+          onUpdate: 'CASCADE',
         },
       },
       stock_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(6),
         references: {
           model: 'STOCKS',
           key: 'stock_id',
+          onDelete: 'SET NULL',
+          onUpdate: 'CASCADE',
         },
       },
       excel_data: {
