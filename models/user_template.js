@@ -1,6 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
   const USER_TEMPLATE = sequelize.define(
-    "USER_TEMPLATES",
+    'USER_TEMPLATES',
     {
       template_name: {
         type: Sequelize.INTEGER,
@@ -10,15 +10,19 @@ module.exports = (sequelize, Sequelize) => {
       user_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: "USERS",
-          key: "user_id",
+          model: 'USERS',
+          key: 'user_id',
+          onDelete: 'SET NULL',
+          onUpdate: 'CASCADE',
         },
       },
       stock_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(6),
         references: {
-          model: "STOCKS",
-          key: "stock_id",
+          model: 'STOCKS',
+          key: 'stock_id',
+          onDelete: 'SET NULL',
+          onUpdate: 'CASCADE',
         },
       },
       created_date: {

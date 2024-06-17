@@ -26,10 +26,7 @@ db.STOCKS = require('../models/stock')(sequelize, Sequelize);
 db.TEMPLATES = require('../models/template')(sequelize, Sequelize);
 db.USER_TEMPLATES = require('../models/user_template')(sequelize, Sequelize);
 db.VALUE_BOARDS = require('../models/value_boards')(sequelize, Sequelize);
-db.USER_TEMPLATE_TEMPORARIES = require('../models/user_template_temporary')(
-  sequelize,
-  Sequelize
-);
+db.USER_TEMPLATE_TEMPORARIES = require('../models/user_template_temporary')(sequelize, Sequelize);
 
 db.USERS.hasMany(db.VALUE_BOARDS, { foreignKey: 'user_id' });
 db.VALUE_BOARDS.belongsTo(db.USERS, { foreignKey: 'user_id' });
