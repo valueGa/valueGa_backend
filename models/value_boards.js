@@ -8,7 +8,7 @@ module.exports = (sequelize, Sequelize) => {
         autoIncrement: true,
       },
       stock_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(6),
         references: {
           model: 'STOCKS',
           key: 'stock_id',

@@ -15,7 +15,7 @@ module.exports = (sequelize, Sequelize) => {
         },
       },
       stock_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(6),
         references: {
           model: 'STOCKS',
           key: 'stock_id',
