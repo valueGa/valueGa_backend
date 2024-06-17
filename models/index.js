@@ -52,7 +52,7 @@ db.USER_TEMPLATE_TEMPORARIES.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
 db.TEMPLATES.hasMany(db.VALUE_BOARDS, { foreignKey: 'template_id' });
 db.VALUE_BOARDS.belongsTo(db.TEMPLATES, { foreignKey: 'template_id' });
 
-db.sequelize.sync({ force: false }).then(() => {
+db.sequelize.sync({ force: false, alter: true }).then(() => {
   console.log('DB 연결 완료');
 });
 
