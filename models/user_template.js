@@ -25,9 +25,6 @@ module.exports = (sequelize, Sequelize) => {
           onUpdate: 'CASCADE',
         },
       },
-      created_date: {
-        type: Sequelize.DATE,
-      },
       excel_data: {
         type: Sequelize.BLOB,
       },

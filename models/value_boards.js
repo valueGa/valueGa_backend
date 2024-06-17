@@ -28,12 +28,6 @@ module.exports = (sequelize, Sequelize) => {
           key: 'template_id',
         },
       },
-      created_date: {
-        type: Sequelize.DATE,
-      },
-      updated_date: {
-        type: Sequelize.DATE,
-      },
       target_price: {
         type: Sequelize.INTEGER,
       },
