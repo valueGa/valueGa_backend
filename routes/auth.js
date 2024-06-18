@@ -1,9 +1,9 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const router = express.Router();
 const { USERS } = require('../models');
 
-const router = express.Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = process.env.SECRET_KEY || 'your_secret_key';
 
@@ -73,11 +73,9 @@ router.get('/logout', async (req, res) => {
 });
 
 const authenticateJWT = (req, res, next) => {
-  const token =
-    req.headers.authorization && req.headers.authorization.split(' ')[1];
+  const token = req.headers.auth && req.headers.auth.split(' ')[1];
 
   if (token) {
-    console.log(token);
     jwt.verify(token, SECRET_KEY, (err, user) => {
       if (err) {
         return res.sendStatus(403);
@@ -94,9 +92,8 @@ const authenticateJWT = (req, res, next) => {
 router.get('/protected', authenticateJWT, (req, res) => {
   // #swagger.description = 'user의 접근 권한 확인'
   // #swagger.tags = ['Authentication']
-  console.log('요청 옴');
-
   res.json({ message: '접근 성공' });
 });
 
-module.exports = { authenticateJWT, router };
+module.exports = { authenticateJWT };
+module.exports.default = router;
