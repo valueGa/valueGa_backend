@@ -1,20 +1,11 @@
 module.exports = (sequelize, Sequelize) => {
-  const USER_TEMPLATE = sequelize.define(
-    'USER_TEMPLATES',
+  const CONSENSUS = sequelize.define(
+    'CONSENSUSES',
     {
-      template_name: {
+      consensus_id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-      },
-      user_id: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'USERS',
-          key: 'user_id',
-          onDelete: 'SET NULL',
-          onUpdate: 'CASCADE',
-        },
       },
       stock_id: {
         type: Sequelize.STRING(6),
@@ -25,6 +16,12 @@ module.exports = (sequelize, Sequelize) => {
           onUpdate: 'CASCADE',
         },
       },
+      target_price: {
+        type: Sequelize.INTEGER,
+      },
+      value_potential: {
+        type: Sequelize.FLOAT,
+      },
       excel_data: {
         type: Sequelize.BLOB,
       },
@@ -34,5 +31,5 @@ module.exports = (sequelize, Sequelize) => {
     }
   );
 
-  return USER_TEMPLATE;
+  return CONSENSUS;
 };

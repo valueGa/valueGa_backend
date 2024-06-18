@@ -1,10 +1,16 @@
 const express = require('express');
+const router = express.Router();
+const { USER_TEMPLATES, USER_TEMPLATE_TEMPORARIES } = require('../models');
+
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { USER_TEMPLATES, USER_TEMPLATE_TEMPORARIES } = require('../models');
 
-const router = express.Router();
+router.get('/', async (req, res) => {
+  // #swagger.description = 'valuation 3개년 데이터 가져오기'
+  // #swagger.tags = ['Valuations']
+  res.json({ message: 'valuation 성공' });
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -22,8 +28,8 @@ const upload = multer({ storage: storage });
 router.post('/save', upload.single('file'), async (req, res) => {
   /*
         #swagger.description = 'user의 template 저장 및 valueBoard에 목표 주가 및 상승 여력 저장'
-        #swagger.tags = ['Templates']
-        #swagger.consumes = ['multipart/form-data']  
+        #swagger.tags = ['Valuations']
+        #swagger.consumes = ['multipart/form-data']
         #swagger.parameters['singleFile'] = {
             in: 'formData',
             type: 'file',
@@ -72,8 +78,8 @@ router.post('/save', upload.single('file'), async (req, res) => {
 router.post('/temporary-save', upload.single('file'), async (req, res) => {
   /*
         #swagger.description = 'user의 template 임시 저장'
-        #swagger.tags = ['Templates']
-        #swagger.consumes = ['multipart/form-data']  
+        #swagger.tags = ['Valuations']
+        #swagger.consumes = ['multipart/form-data']
         #swagger.parameters['singleFile'] = {
             in: 'formData',
             type: 'file',
@@ -121,7 +127,7 @@ router.post('/temporary-save', upload.single('file'), async (req, res) => {
 
 router.get('/download/:id', async (req, res) => {
   // #swagger.description = 'user의 template 다운로드'
-  // #swagger.tags = ['Templates']
+  // #swagger.tags = ['Valuations']
   try {
     const id = req.params.id;
     const template = await USER_TEMPLATES.findByPk(id);
