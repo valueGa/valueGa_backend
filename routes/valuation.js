@@ -1,14 +1,20 @@
-const express = require('express');
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-const { USER_TEMPLATES, USER_TEMPLATE_TEMPORARIES } = require('../models');
-
+const express = require("express");
 const router = express.Router();
+const { USER_TEMPLATES, USER_TEMPLATE_TEMPORARIES } = require("../models");
+
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
+
+router.get("/", async (req, res) => {
+  // #swagger.description = 'valuation 3개년 데이터 가져오기'
+  // #swagger.tags = ['Valuations']
+  res.json({ message: "valuation 성공" });
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, './uploads'));
+    cb(null, path.join(__dirname, "./uploads"));
   },
   filename: (req, file, cb) => {
     cb(null, `a.xlsx`);
@@ -16,14 +22,14 @@ const storage = multer.diskStorage({
 });
 
 const excelFilePath = path.join(__dirname, `./uploads/a.xlsx`);
-const outputFilePath = path.join(__dirname, './uploads/abx_binary.txt');
+const outputFilePath = path.join(__dirname, "./uploads/abx_binary.txt");
 const upload = multer({ storage: storage });
 
-router.post('/save', upload.single('file'), async (req, res) => {
+router.post("/save", upload.single("file"), async (req, res) => {
   /*
         #swagger.description = 'user의 template 저장 및 valueBoard에 목표 주가 및 상승 여력 저장'
-        #swagger.tags = ['Templates']
-        #swagger.consumes = ['multipart/form-data']  
+        #swagger.tags = ['Valuations']
+        #swagger.consumes = ['multipart/form-data']
         #swagger.parameters['singleFile'] = {
             in: 'formData',
             type: 'file',
@@ -43,7 +49,7 @@ router.post('/save', upload.single('file'), async (req, res) => {
     !value_potential ||
     !template_id
   ) {
-    return res.status(400).send('데이터가 비었어요');
+    return res.status(400).send("데이터가 비었어요");
   }
   try {
     const fileContent = fs.readFileSync(excelFilePath);
@@ -62,18 +68,18 @@ router.post('/save', upload.single('file'), async (req, res) => {
       value_potential: value_potential,
     });
 
-    res.status(200).send('템플릿과 목표 주가 저장 완료');
+    res.status(200).send("템플릿과 목표 주가 저장 완료");
   } catch (error) {
-    console.error('저장 중 에러: ', error);
-    res.status(500).send('저장 중 에러');
+    console.error("저장 중 에러: ", error);
+    res.status(500).send("저장 중 에러");
   }
 });
 
-router.post('/temporary-save', upload.single('file'), async (req, res) => {
+router.post("/temporary-save", upload.single("file"), async (req, res) => {
   /*
         #swagger.description = 'user의 template 임시 저장'
-        #swagger.tags = ['Templates']
-        #swagger.consumes = ['multipart/form-data']  
+        #swagger.tags = ['Valuations']
+        #swagger.consumes = ['multipart/form-data']
         #swagger.parameters['singleFile'] = {
             in: 'formData',
             type: 'file',
@@ -85,11 +91,11 @@ router.post('/temporary-save', upload.single('file'), async (req, res) => {
   const file = req.file;
 
   if (!file || !user_id || !stock_id) {
-    return res.status(400).send('파일이 없어요');
+    return res.status(400).send("파일이 없어요");
   }
 
   if (!stock_id) {
-    return res.status(400).send('종목이 뭐에요');
+    return res.status(400).send("종목이 뭐에요");
   }
 
   try {
@@ -100,7 +106,7 @@ router.post('/temporary-save', upload.single('file'), async (req, res) => {
     if (templateCount >= 3) {
       return res
         .status(400)
-        .json({ message: '템플릿 저장 개수는 최대 3개입니다!' });
+        .json({ message: "템플릿 저장 개수는 최대 3개입니다!" });
     }
 
     const fileContent = fs.readFileSync(excelFilePath);
@@ -111,23 +117,23 @@ router.post('/temporary-save', upload.single('file'), async (req, res) => {
       excel_data: fileContent,
     });
 
-    console.log('템플릿 저장 완료');
-    res.status(200).send('템플릿 저장 완료');
+    console.log("템플릿 저장 완료");
+    res.status(200).send("템플릿 저장 완료");
   } catch (error) {
-    console.error('템플릿 저장 중 에러', error);
-    res.status(500).send('템플릿 저장 중 에러');
+    console.error("템플릿 저장 중 에러", error);
+    res.status(500).send("템플릿 저장 중 에러");
   }
 });
 
-router.get('/download/:id', async (req, res) => {
+router.get("/download/:id", async (req, res) => {
   // #swagger.description = 'user의 template 다운로드'
-  // #swagger.tags = ['Templates']
+  // #swagger.tags = ['Valuations']
   try {
     const id = req.params.id;
     const template = await USER_TEMPLATES.findByPk(id);
 
     if (!template) {
-      return res.status(404).send('템플릿 없음');
+      return res.status(404).send("템플릿 없음");
     }
 
     const binaryContent = template.excel_data;
@@ -135,17 +141,17 @@ router.get('/download/:id', async (req, res) => {
     const outputPath = path.join(__dirname, `./uploads/restored_a.xlsx`);
     fs.writeFileSync(outputPath, binaryContent);
 
-    res.download(outputPath, 'restored_a.xlsx', (err) => {
+    res.download(outputPath, "restored_a.xlsx", (err) => {
       if (err) {
-        console.error('파일 다운로드 중 에러:', err);
-        res.status(500).send('파일 전송 중 에러');
+        console.error("파일 다운로드 중 에러:", err);
+        res.status(500).send("파일 전송 중 에러");
       } else {
-        console.log('파일 전송 완료');
+        console.log("파일 전송 완료");
       }
     });
   } catch (error) {
-    console.error('파일 다운로드 중 에러', error);
-    res.status(500).send('파일 다운로드 중 에러');
+    console.error("파일 다운로드 중 에러", error);
+    res.status(500).send("파일 다운로드 중 에러");
   }
 });
 
