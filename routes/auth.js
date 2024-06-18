@@ -77,6 +77,7 @@ const authenticateJWT = (req, res, next) => {
     req.headers.authorization && req.headers.authorization.split(' ')[1];
 
   if (token) {
+    console.log(token);
     jwt.verify(token, SECRET_KEY, (err, user) => {
       if (err) {
         return res.sendStatus(403);
@@ -93,7 +94,9 @@ const authenticateJWT = (req, res, next) => {
 router.get('/protected', authenticateJWT, (req, res) => {
   // #swagger.description = 'user의 접근 권한 확인'
   // #swagger.tags = ['Authentication']
+  console.log('요청 옴');
+
   res.json({ message: '접근 성공' });
 });
 
-module.exports = router;
+module.exports = { authenticateJWT, router };

@@ -21,7 +21,7 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.USERS = require('../models/user')(sequelize, Sequelize);
-// db.FINANCE_INFOS = require('./finance_info')(sequelize, Sequelize);
+db.FINANCE_INFOS = require('./finance_infos')(sequelize, Sequelize);
 db.STOCKS = require('../models/stock')(sequelize, Sequelize);
 db.TEMPLATES = require('../models/template')(sequelize, Sequelize);
 db.USER_TEMPLATES = require('../models/user_template')(sequelize, Sequelize);
@@ -46,8 +46,8 @@ db.USER_TEMPLATES.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
 db.STOCKS.hasMany(db.USER_TEMPLATE_TEMPORARIES, { foreignKey: 'stock_id' });
 db.USER_TEMPLATE_TEMPORARIES.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
 
-// db.STOCKS.hasMany(db.FINANCE_INFOS, { foreignKey: 'stock_id' });
-// db.FINANCE_INFOS.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
+db.STOCKS.hasMany(db.FINANCE_INFOS, { foreignKey: 'stock_id' });
+db.FINANCE_INFOS.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
 
 db.TEMPLATES.hasMany(db.VALUE_BOARDS, { foreignKey: 'template_id' });
 db.VALUE_BOARDS.belongsTo(db.TEMPLATES, { foreignKey: 'template_id' });
