@@ -1,12 +1,12 @@
 module.exports = (sequelize, Sequelize) => {
   const FINANCE_INFO = sequelize.define(
-    "FINANCE_INFOS",
+    'FINANCE_INFOS',
     {
       stock_id: {
         type: Sequelize.STRING(6),
         references: {
-          model: "STOCKS",
-          key: "stock_id",
+          model: 'STOCKS',
+          key: 'stock_id',
         },
       },
       year: {
@@ -73,7 +73,7 @@ module.exports = (sequelize, Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["stock_id", "year"],
+          fields: ['stock_id', 'year'],
         },
       ],
     }
