@@ -1,15 +1,43 @@
 const express = require('express');
 const router = express.Router();
-const { USER_TEMPLATES, USER_TEMPLATE_TEMPORARIES } = require('../models');
-
+const {
+  USER_TEMPLATES,
+  USER_TEMPLATE_TEMPORARIES,
+  FINANCE_INFOS,
+} = require('../models');
+const { Op } = require('sequelize');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
-router.get('/', async (req, res) => {
-  // #swagger.description = 'valuation 3개년 데이터 가져오기'
-  // #swagger.tags = ['Valuations']
-  res.json({ message: 'valuation 성공' });
+router.post('/', async (req, res) => {
+  /* 
+    #swagger.description = 'valuation 생성시 3개년 데이터 가져오기'
+    #swagger.tags = ['Valuations']
+  */
+  try {
+    const { stock_id, years } = req.body;
+    console.log(stock_id, years);
+
+    const financeInfos = await FINANCE_INFOS.findAll({
+      where: {
+        stock_id: stock_id,
+        year: {
+          [Op.in]: years,
+        },
+      },
+    });
+
+    const response = {};
+    financeInfos.forEach((info) => {
+      response[info.year] = info;
+    });
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'valuation 데이터 가져오기 실패' });
+  }
 });
 
 const storage = multer.diskStorage({
