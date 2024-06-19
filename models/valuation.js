@@ -33,6 +33,9 @@ module.exports = (sequelize, Sequelize) => {
       is_temporary: {
         type: Sequelize.BOOLEAN,
       },
+      excel_data: {
+        type: Sequelize.BLOB,
+      },
     },
     {
       freezeTableName: true,
