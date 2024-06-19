@@ -7,6 +7,8 @@ const swaggerFile = require('./swagger/swagger-output');
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 const valuationRouter = require('./routes/valuation');
 const authRouter = require('./routes/auth').default;
+const consensusRouter = require('./routes/consensus');
+
 // const { authenticateJWT } = require("./routes/auth");
 
 const app = express();
@@ -21,6 +23,7 @@ app.get('/', (req, res) => {
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 app.use('/api/auth', authRouter);
 app.use('/api/valuation', valuationRouter);
+app.use('/consensus', consensusRouter);
 // app.use("/api/valuation", authenticateJWT, valuationRouter);
 
 server.listen(3000, () => {
