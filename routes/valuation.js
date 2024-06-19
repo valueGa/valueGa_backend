@@ -14,15 +14,15 @@ router.get('/', async (req, res) => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, './uploads'));
+    cb(null, path.join(__dirname, './upload'));
   },
   filename: (req, file, cb) => {
     cb(null, `a.xlsx`);
   },
 });
 
-const excelFilePath = path.join(__dirname, `./uploads/a.xlsx`);
-const outputFilePath = path.join(__dirname, './uploads/abx_binary.txt');
+const excelFilePath = path.join(__dirname, `./upload/a.xlsx`);
+const outputFilePath = path.join(__dirname, './upload/abx_binary.txt');
 const upload = multer({ storage: storage });
 
 router.post('/save', upload.single('file'), async (req, res) => {
@@ -125,7 +125,7 @@ router.get('/download/:id', async (req, res) => {
 
     const binaryContent = valuation.excel_data;
 
-    const outputPath = path.join(__dirname, `./uploads/restored_a.xlsx`);
+    const outputPath = path.join(__dirname, `./upload/restored_a.xlsx`);
     fs.writeFileSync(outputPath, binaryContent);
 
     res.download(outputPath, 'restored_a.xlsx', (err) => {
