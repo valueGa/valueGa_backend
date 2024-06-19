@@ -42,8 +42,15 @@ db.FINANCE_INFOS.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
 db.STOCKS.hasOne(db.CONSENSUSES, { foreignKey: 'stock_id' });
 db.CONSENSUSES.belongsTo(db.STOCKS, { foreignKey: 'stock_id' });
 
-db.sequelize.sync({ force: false, alter: false }).then(() => {
-  console.log('DB 연결 완료');
-});
+db.sequelize
+  .sync({ force: false })
+  .then(async () => {
+    console.log('DB 연결 완료');
+  })
+  .catch((error) => {
+    console.error('DB 연결 실패:', error);
+  });
 
 module.exports = db;
+
+// 벨류에이션은 개별 평가 목표주가, 개별 상승 여력
