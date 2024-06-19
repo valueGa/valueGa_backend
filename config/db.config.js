@@ -1,9 +1,9 @@
 const dotenv = require('dotenv');
 const path = require('path');
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, './../.env') });
 
 module.exports = {
-  HOST: process.env.HOST_DOMAIN,
+  HOST: process.env.HOST,
   USER: process.env.USER_NAME,
   // password에는 설치할때 설정한 비밀번호 입력!
   PASSWORD: process.env.USER_PASSWORD,
