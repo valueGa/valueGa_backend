@@ -41,7 +41,7 @@ module.exports = (sequelize, Sequelize) => {
           const { stock_id } = valuation;
 
           const { targetPriceAvg, valuePotentialAvg } = await VALUATION.findAll({
-            where: { stock_id, is_temporary: true },
+            where: { stock_id, is_temporary: false },
             attributes: [
               [Sequelize.cast(Sequelize.fn('AVG', Sequelize.col('target_price')), 'DECIMAL(10,2)'), 'target_price_avg'],
               [
@@ -57,15 +57,12 @@ module.exports = (sequelize, Sequelize) => {
             };
           });
 
-          console.log(targetPriceAvg);
-          console.log(valuePotentialAvg);
-
           if (targetPriceAvg != null) {
             // 동일한 stock_id를 가진 CONSENSUSES 정보 업데이트
             await sequelize.models.CONSENSUSES.update(
               {
                 target_price: parseInt(targetPriceAvg),
-                value_potential: parseFloat(targetPriceAvg).toFixed(2),
+                value_potential: parseFloat(valuePotentialAvg).toFixed(2),
               },
               { where: { stock_id } }
             );
@@ -75,8 +72,8 @@ module.exports = (sequelize, Sequelize) => {
         afterUpdate: async (valuation, options) => {
           //임시저장 -> 저장을 바뀌는 경우를 감지해서 Update
           const { stock_id, is_temporary } = valuation;
-          if (is_temporary) {
-            const targetPriceAvg = await VALUATION.findAll({
+          if (!is_temporary) {
+            const { targetPriceAvg, valuePotentialAvg } = await VALUATION.findAll({
               where: { stock_id },
               attributes: [
                 [
@@ -98,8 +95,8 @@ module.exports = (sequelize, Sequelize) => {
 
             await sequelize.models.CONSENSUSES.update(
               {
-                target_price: parseInt(targetPriceAvg.targetPriceAvg),
-                value_potential: parseFloat(targetPriceAvg.valuePotentialAvg).toFixed(2),
+                target_price: parseInt(targetPriceAvg),
+                value_potential: parseFloat(valuePotentialAvg).toFixed(2),
               },
               { where: { stock_id } }
             );
