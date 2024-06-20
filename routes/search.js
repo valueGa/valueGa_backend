@@ -50,9 +50,15 @@ router.get('/', async (req, res) => {
 
       searchList = [...searchList, ...additionalList];
     }
+    searchResult = [];
 
-    res.status(200).json({ searchList: searchList });
+    for (const word of searchList) {
+      searchResult.push([word.stock_name, word.stock_id]);
+    }
+
+    res.status(200).json({ searchList: searchResult });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: '서버 오류가 발생했습니다.' });
   }
 });
