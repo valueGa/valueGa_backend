@@ -6,6 +6,7 @@ const swaggerFile = require('./swagger/swagger-output');
 const valuationRouter = require('./routes/valuation');
 const authRouter = require('./routes/auth').default;
 const consensusRouter = require('./routes/consensus');
+const searchRouter = require('./routes/search');
 
 // const { authenticateJWT } = require("./routes/auth");
 
@@ -22,6 +23,7 @@ app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 app.use('/api/auth', authRouter);
 app.use('/api/valuation', valuationRouter);
 app.use('/consensus', consensusRouter);
+app.use('/search', searchRouter);
 // app.use("/api/valuation", authenticateJWT, valuationRouter);
 
 server.listen(3000, () => {
