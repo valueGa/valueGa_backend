@@ -6,7 +6,14 @@ const fs = require('fs');
 const path = require('path');
 
 const excelFilePath = path.join(__dirname, `./upload/a.xlsx`);
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, './upload'));
+  },
+  filename: (req, file, cb) => {
+    cb(null, `a.xlsx`);
+  },
+});
 const upload = multer({ storage: storage });
 
 // 엑셀 파일을 입력받아 binary화 하여 템플릿으로 저장하는 API
