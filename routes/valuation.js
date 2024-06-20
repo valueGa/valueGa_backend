@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { VALUATIONS, FINANCE_INFOS } = require('../models');
+
+const { VALUATIONS, FINANCE_INFOS , STOCKS } = require('../models');
+const { authenticateJWT } = require('./auth');
+
 const { Op } = require('sequelize');
 
 const multer = require('multer');
@@ -134,6 +137,84 @@ router.post('/temporary-save', upload.single('file'), async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: '임시저장 중 에러' });
+  }
+});
+
+router.delete('/delete', authenticateJWT, async (req, res) => {
+  /*
+        #swagger.description = 'user의 valuation 삭제'
+        #swagger.tags = ['Valuations']
+        #swagger.parameters['valuation_id'] = {
+            in: 'body',
+            type: 'string',
+            required: 'true',
+            description: '삭제할 valuation의 ID',
+        } 
+    */
+  const { valuation_id } = req.body;
+  console.log('DELETE 요청 도착'); // 요청 도착 로그
+
+  if (!valuation_id) {
+    return res.status(400).send({ message: 'valuation_id가 필요' });
+  }
+
+  const user_id = req.user.user_id; // 인증된 사용자의 user_id
+
+  try {
+    const valuation = await VALUATIONS.findOne({
+      where: { valuation_id: valuation_id, user_id: user_id },
+    });
+
+    if (!valuation) {
+      return res.status(404).send({ message: '밸류에이션을 찾을 수 없음' });
+    }
+
+    await VALUATIONS.destroy({
+      where: { valuation_id: valuation_id },
+    });
+
+    res.status(200).send({ message: '밸류에이션 삭제 완료' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: '삭제 중 에러' });
+  }
+});
+
+router.get('/valuations', authenticateJWT, async (req, res) => {
+  /*
+        #swagger.description = '사용자의 valuation 정보를 가져옴'
+        #swagger.tags = ['Valuations']
+    */
+
+  const user_id = req.user.user_id; // 토큰에서 추출한 user_id
+
+  console.log('요청 도착, 사용자 ID:', req.user.user_id); // 사용자 ID 로그
+
+  try {
+    const valuations = await VALUATIONS.findAll({
+      where: { user_id: user_id },
+      include: [
+        {
+          model: STOCKS,
+          attributes: ['stock_name'],
+          required: true,
+        },
+      ],
+    });
+
+    const result = valuations.map((valuation) => ({
+      valuation_id: valuation.valuation_id,
+      stock_name: valuation.STOCK.stock_name,
+      target_price: valuation.target_price,
+      value_potential: valuation.value_potential,
+      date: valuation.createdAt,
+      is_temporary: valuation.is_temporary,
+    }));
+
+    res.status(200).json({ data: result });
+  } catch (error) {
+    console.error('밸류에이션 정보 가져오기 중 에러:', error);
+    res.status(500).send({ message: '밸류에이션 정보 가져오기 중 에러' });
   }
 });
 

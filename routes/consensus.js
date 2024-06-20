@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { VALUATIONS, CONSENSUSES, USERS, STOCKS } = require('../models');
 const { Op } = require('sequelize');
+const { fetchCurrentStockPrice } = require('../service/getCurrentStockPrice');
+const { fetchDailyChartInfo } = require('../service/getDailyChart');
+const { getAccessToken } = require('../service/getAccessToken');
 
 // 개별 컨센서스 조회
 router.get('/:stock_code', async (req, res) => {
@@ -74,8 +77,30 @@ router.get('/:stock_code', async (req, res) => {
       cnt++;
     }
 
-    // 평균 목표주가, 상승/하락 여력 return 가능
+    async function fetchData(stock_code, retryCount = 0) {
+      try {
+        const currentPrice = await fetchCurrentStockPrice(stock_code);
+        const chartInfo = await fetchDailyChartInfo(stock_code);
+        return { currentPrice, chartInfo };
+      } catch (err) {
+        if (err.response && err.response.data && err.response.data.msg_cd === 'EGW00121') {
+          // token 토큰 만료로 인한 오류인 경우 갱신하고 재실행
+          if (retryCount < 1) {
+            await getAccessToken();
+            return await fetchData(stock_code, retryCount + 1);
+          } else {
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    const result = await fetchData(stock_code);
+
     return res.status(200).json({
+      currentPrice: result['currentPrice'],
       consensusInfo: {
         target_price: consensusInfo.target_price,
         value_potential: consensusInfo.value_potential,
@@ -85,6 +110,7 @@ router.get('/:stock_code', async (req, res) => {
         upPoten: positiveCount,
         downPoten: negativeCount,
       },
+      chartInfo: result['chartInfo'],
     });
   } catch (err) {
     res.status(500).json({ error: '현재 서버에 오류가 발생했습니다.' });
