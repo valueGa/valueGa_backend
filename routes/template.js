@@ -5,7 +5,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
-const excelFilePath = path.join(__dirname, `./uploads/a.xlsx`);
+const excelFilePath = path.join(__dirname, `./upload/a.xlsx`);
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
