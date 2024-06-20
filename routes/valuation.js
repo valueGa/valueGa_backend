@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { VALUATIONS, STOCKS } = require('../models');
+
+const { VALUATIONS, FINANCE_INFOS , STOCKS } = require('../models');
 const { authenticateJWT } = require('./auth');
+
 const { Op } = require('sequelize');
 
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
-router.post('/', async (req, res) => {
+router.post('/init', async (req, res) => {
   /* 
     #swagger.description = 'valuation 생성시 3개년 데이터 가져오기'
     #swagger.tags = ['Valuations']
