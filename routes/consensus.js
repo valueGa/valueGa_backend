@@ -122,6 +122,31 @@ router.get('/', async (req, res) => {
   // #swagger.description = '종합 컨센서스 조회'
   // #swagger.tags = ['Consensuses']
 
+  // 현재가 받아오기
+  async function fetchStockPrice(stock_code, retryCount = 0) {
+    try {
+      const currentPrice = await fetchCurrentStockPrice(stock_code);
+      return currentPrice;
+    } catch (err) {
+      if (
+        err.response &&
+        err.response.data &&
+        (err.response.data.msg_cd === 'EGW00121' || err.response.data.msg_cd === 'EGW00123')
+      ) {
+        // token 토큰 만료로 인한 오류인 경우 갱신하고 재실행
+        if (retryCount < 1) {
+          console.log('재발급 요청');
+          await getAccessToken();
+          return await fetchStockPrice(stock_code, retryCount + 1);
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
+    }
+  }
+
   try {
     const { index = 0 } = req.query;
 
@@ -143,12 +168,14 @@ router.get('/', async (req, res) => {
           stock_id: overInfo.stock_id,
         },
       });
+      const currentPrice = await fetchStockPrice(overInfo.stock_id);
 
       overTop5[`top${cnt}`] = {
         company_name: stockInfo.stock_name,
         stock_code: overInfo.stock_id,
         value_potential: overInfo.value_potential,
         target_price: overInfo.target_price,
+        currentPrice: currentPrice,
       };
       cnt++;
     }
@@ -172,11 +199,14 @@ router.get('/', async (req, res) => {
         },
       });
 
+      const currentPrice = await fetchStockPrice(underInfo.stock_id);
+
       underTop5[`top${cnt}`] = {
         company_name: stockInfo.stock_name,
         stock_code: underInfo.stock_id,
         value_potential: underInfo.value_potential,
         target_price: underInfo.target_price,
+        currentPrice: currentPrice,
       };
       cnt++;
     }
