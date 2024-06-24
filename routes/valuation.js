@@ -108,7 +108,7 @@ router.post('/temporary', async (req, res) => {
   }
 });
 
-router.delete('/delete', authenticateJWT, async (req, res) => {
+router.delete('/:valuation_id', authenticateJWT, async (req, res) => {
   /*
         #swagger.description = 'user의 valuation 삭제'
         #swagger.tags = ['Valuations']
@@ -223,27 +223,18 @@ router.put('/:valuation_id', async (req, res) => {
   try {
     const existingValuation = await VALUATIONS.findOne({
       where: {
-        valuation_id: valuation_id,
+        valuation_id: parseInt(valuation_id, 10),
         user_id: user_id,
       },
     });
 
     if (existingValuation) {
-      await VALUATIONS.update(
-        {
-          target_price: target_price,
-          value_potential: value_potential,
-          excel_data: excel_data,
-          is_temporary: false,
-        },
-        {
-          where: {
-            valuation_id: valuation_id,
-            user_id: user_id,
-            is_temporary: existingValuation.is_temporary,
-          },
-        }
-      );
+      await existingValuation.update({
+        target_price: target_price,
+        value_potential: value_potential,
+        excel_data: excel_data,
+        is_temporary: false,
+      });
 
       res.status(200).send({ message: '밸류에이션 업데이트 완료' });
     } else {
@@ -277,27 +268,16 @@ router.put('/temporary/:valuation_id', async (req, res) => {
     });
 
     if (existingValuation) {
-      await VALUATIONS.update(
-        {
-          target_price: target_price,
-          value_potential: value_potential,
-          excel_data: excel_data,
-          is_temporary: true, // 명시적으로 true로 설정
-        },
-        {
-          where: {
-            valuation_id: valuation_id,
-            user_id: user_id,
-            is_temporary: existingValuation.is_temporary, // 명시적으로 true로 설정
-          },
-        }
-      );
+      await existingValuation.update({
+        target_price: target_price,
+        value_potential: value_potential,
+        excel_data: excel_data,
+        is_temporary: true, // 명시적으로 true로 설정
+      });
 
       res.status(200).send({ message: '임시저장 업데이트 완료' });
     } else {
-      return res
-        .status(404)
-        .send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
+      return res.status(404).send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
     }
   } catch (error) {
     console.log(error);
@@ -331,7 +311,7 @@ router.get('/:id', async (req, res) => {
     });
 
     if (valuation) {
-      res.status(200).send({
+      return res.status(200).json({
         valuation: {
           excel_data: valuation.excel_data,
           target_price: valuation.target_price,
