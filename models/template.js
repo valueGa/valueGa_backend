@@ -18,7 +18,7 @@ module.exports = (sequelize, Sequelize) => {
         },
       },
       excel_data: {
-        type: Sequelize.BLOB,
+        type: Sequelize.JSON,
       },
     },
     {
