@@ -1,48 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const { TEMPLATES } = require('../models');
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
 
-const excelFilePath = path.join(__dirname, `./upload/a.xlsx`);
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, './upload'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, `a.xlsx`);
-  },
-});
-const upload = multer({ storage: storage });
-
-// 엑셀 파일을 입력받아 binary화 하여 템플릿으로 저장하는 API
-router.post('/', upload.single('file'), async (req, res) => {
+// 템플릿으로 저장하는 API
+router.post('/', async (req, res) => {
   /* 
       #swagger.description = '템플릿화'
       #swagger.tags = ['Templates']
-      #swagger.consumes = ['multipart/form-data']
-      #swagger.parameters['file'] = {
-            in: 'files',
-            type: 'file',
-            required: 'true',
-            description: '엑셀파일 업로드',
-          }
     */
-  const file = req.file;
-  const { template_name, user_id } = req.body;
 
-  if (!file) {
-    return res.status(400).send('파일이 없습니다.');
-  }
+  const { template_name, user_id, excel_data } = req.body;
 
   try {
-    const fileContent = fs.readFileSync(excelFilePath);
-
     const newTemplate = await TEMPLATES.create({
       template_name: template_name,
       user_id: user_id,
-      excel_data: fileContent,
+      excel_data: excel_data,
     });
 
     res.status(200).json(newTemplate);
