@@ -211,18 +211,12 @@ router.put('/:valuation_id', async (req, res) => {
   /*
         #swagger.description = 'user의 valuation 수정'
         #swagger.tags = ['Valuations']
-        #swagger.consumes = ['multipart/form-data']
-        #swagger.parameters['singleFile'] = {
-            in: 'formData',
-            type: 'file',
-            required: 'true',
-            description: '엑셀파일 업로드',
+        #swagger.consumes = ['application/json']
     } */
   const { valuation_id } = req.params;
-  const { user_id, target_price, value_potential } = req.body;
-  const file = req.file;
+  const { user_id, target_price, value_potential, excel_data } = req.body;
 
-  if (!file || !user_id || !target_price || !value_potential) {
+  if (!user_id || !target_price || !value_potential || !excel_data) {
     return res.status(400).send({ message: '데이터가 비었어요' });
   }
 
@@ -239,7 +233,7 @@ router.put('/:valuation_id', async (req, res) => {
         {
           target_price: target_price,
           value_potential: value_potential,
-          excel_data: fileContent,
+          excel_data: excel_data,
           is_temporary: false,
         },
         {
@@ -261,21 +255,16 @@ router.put('/:valuation_id', async (req, res) => {
   }
 });
 
-router.put('/:valuation_id/temporary', async (req, res) => {
+router.put('/temporary/:valuation_id', async (req, res) => {
   /*
         #swagger.description = 'user의 valuation 임시 수정'
         #swagger.tags = ['Valuations']
-        #swagger.consumes = ['multipart/form-data']
-        #swagger.parameters['singleFile'] = {
-            in: 'formData',
-            type: 'file',
-            required: 'true',
-            description: '엑셀파일 업로드',
-    } */
+        #swagger.consumes = ['application/json']
+     */
   const { valuation_id } = req.params;
-  const { user_id, target_price, value_potential } = req.body;
+  const { user_id, target_price, value_potential, excel_data } = req.body;
 
-  if (!user_id || !target_price || !value_potential) {
+  if (!user_id || !target_price || !value_potential || !excel_data) {
     return res.status(400).send({ message: '데이터가 비었어요' });
   }
 
@@ -288,13 +277,11 @@ router.put('/:valuation_id/temporary', async (req, res) => {
     });
 
     if (existingValuation) {
-      const fileContent = fs.readFileSync(file.path);
-
       await VALUATIONS.update(
         {
           target_price: target_price,
           value_potential: value_potential,
-          excel_data: fileContent,
+          excel_data: excel_data,
           is_temporary: true, // 명시적으로 true로 설정
         },
         {
@@ -308,7 +295,9 @@ router.put('/:valuation_id/temporary', async (req, res) => {
 
       res.status(200).send({ message: '임시저장 업데이트 완료' });
     } else {
-      return res.status(404).send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
+      return res
+        .status(404)
+        .send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
     }
   } catch (error) {
     console.log(error);
