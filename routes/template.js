@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { TEMPLATES, STOCKS } = require('../models');
+const { TEMPLATES } = require('../models');
 const { authenticateJWT } = require('./auth');
 
 router.get('/', authenticateJWT, async (req, res) => {
@@ -17,6 +17,7 @@ router.get('/', authenticateJWT, async (req, res) => {
     return res.status(500).json({ error: '서버 오류가 발생했습니다.' });
   }
 });
+
 router.post('/', async (req, res) => {
   //  #swagger.description = '템플릿한 내용을 저장'
   //  #swagger.tags = ['Templates']
@@ -44,13 +45,17 @@ router.get('/:template_id', async (req, res) => {
   const { template_id } = req.params;
 
   try {
-    const template = await TEMPLATES.findOne({
+    const existingTemplate = await TEMPLATES.findOne({
       where: {
         template_id: parseInt(template_id),
       },
     });
-    console.log(template);
-    res.status(200).json(template);
+
+    if (!existingTemplate) {
+      return res.status(404).send({ message: '존재하지 않는 템플릿 입니다.' });
+    }
+
+    res.status(200).json(existingTemplate);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: '템플릿화 실패' });
