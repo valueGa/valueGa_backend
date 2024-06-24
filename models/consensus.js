@@ -23,7 +23,7 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.FLOAT,
       },
       excel_data: {
-        type: Sequelize.BLOB,
+        type: Sequelize.JSON,
       },
     },
     {

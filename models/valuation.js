@@ -34,7 +34,7 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.BOOLEAN,
       },
       excel_data: {
-        type: Sequelize.BLOB,
+        type: Sequelize.JSON,
       },
     },
     {
@@ -43,28 +43,17 @@ module.exports = (sequelize, Sequelize) => {
         afterCreate: async (valuation, options) => {
           const { stock_id } = valuation;
 
-          const { targetPriceAvg, valuePotentialAvg } = await VALUATION.findAll(
-            {
-              where: { stock_id, is_temporary: false },
-              attributes: [
-                [
-                  Sequelize.cast(
-                    Sequelize.fn('AVG', Sequelize.col('target_price')),
-                    'DECIMAL(10,2)'
-                  ),
-                  'target_price_avg',
-                ],
-                [
-                  Sequelize.cast(
-                    Sequelize.fn('AVG', Sequelize.col('value_potential')),
-                    'DECIMAL(10,2)'
-                  ),
-                  'value_potential_avg',
-                ],
+          const { targetPriceAvg, valuePotentialAvg } = await VALUATION.findAll({
+            where: { stock_id, is_temporary: false },
+            attributes: [
+              [Sequelize.cast(Sequelize.fn('AVG', Sequelize.col('target_price')), 'DECIMAL(10,2)'), 'target_price_avg'],
+              [
+                Sequelize.cast(Sequelize.fn('AVG', Sequelize.col('value_potential')), 'DECIMAL(10,2)'),
+                'value_potential_avg',
               ],
-              raw: true,
-            }
-          ).then((result) => {
+            ],
+            raw: true,
+          }).then((result) => {
             return {
               targetPriceAvg: result[0].target_price_avg,
               valuePotentialAvg: result[0].value_potential_avg,
@@ -87,32 +76,25 @@ module.exports = (sequelize, Sequelize) => {
           //임시저장 -> 저장을 바뀌는 경우를 감지해서 Update
           const { stock_id, is_temporary } = valuation;
           if (!is_temporary) {
-            const { targetPriceAvg, valuePotentialAvg } =
-              await VALUATION.findAll({
-                where: { stock_id },
-                attributes: [
-                  [
-                    Sequelize.cast(
-                      Sequelize.fn('AVG', Sequelize.col('target_price')),
-                      'DECIMAL(10,2)'
-                    ),
-                    'target_price_avg',
-                  ],
-                  [
-                    Sequelize.cast(
-                      Sequelize.fn('AVG', Sequelize.col('value_potential')),
-                      'DECIMAL(10,2)'
-                    ),
-                    'value_potential_avg',
-                  ],
+            const { targetPriceAvg, valuePotentialAvg } = await VALUATION.findAll({
+              where: { stock_id },
+              attributes: [
+                [
+                  Sequelize.cast(Sequelize.fn('AVG', Sequelize.col('target_price')), 'DECIMAL(10,2)'),
+                  'target_price_avg',
                 ],
-                raw: true,
-              }).then((result) => {
-                return {
-                  targetPriceAvg: result[0].target_price_avg,
-                  valuePotentialAvg: result[0].value_potential_avg,
-                };
-              });
+                [
+                  Sequelize.cast(Sequelize.fn('AVG', Sequelize.col('value_potential')), 'DECIMAL(10,2)'),
+                  'value_potential_avg',
+                ],
+              ],
+              raw: true,
+            }).then((result) => {
+              return {
+                targetPriceAvg: result[0].target_price_avg,
+                valuePotentialAvg: result[0].value_potential_avg,
+              };
+            });
 
             await sequelize.models.CONSENSUSES.update(
               {
