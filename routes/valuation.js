@@ -6,10 +6,6 @@ const { authenticateJWT } = require('./auth');
 
 const { Op } = require('sequelize');
 
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-
 router.post('/init', async (req, res) => {
   /* 
     #swagger.description = 'valuation 생성시 3개년 데이터 가져오기'
@@ -39,41 +35,18 @@ router.post('/init', async (req, res) => {
   }
 });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, './upload'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, `a.xlsx`);
-  },
-});
+router.post('/', async (req, res) => {
+  // #swagger.description = 'user의 valuation 저장'
+  // #swagger.tags = ['Valuations']
 
-const excelFilePath = path.join(__dirname, `./upload/a.xlsx`);
-const outputFilePath = path.join(__dirname, './upload/abx_binary.txt');
-const upload = multer({ storage: storage });
-
-router.post('/save', upload.single('file'), async (req, res) => {
-  /*
-        #swagger.description = 'user의 valuation 저장'
-        #swagger.tags = ['Valuations']
-        #swagger.consumes = ['multipart/form-data']
-        #swagger.parameters['singleFile'] = {
-            in: 'formData',
-            type: 'file',
-            required: 'true',
-            description: '엑셀파일 업로드',
-    } */
   const { id } = req.query;
 
-  const { user_id, target_price, value_potential } = req.body;
-  const file = req.file;
+  const { user_id, target_price, value_potential, excel_data } = req.body;
 
-  if (!file || !user_id || !id || !target_price || !value_potential) {
+  if (!excel_data || !user_id || !id || !target_price || !value_potential) {
     return res.status(400).send({ message: '데이터가 비었어요' });
   }
   try {
-    const fileContent = fs.readFileSync(excelFilePath);
-
     await VALUATIONS.create({
       user_id: user_id,
       stock_id: id,
@@ -81,34 +54,26 @@ router.post('/save', upload.single('file'), async (req, res) => {
       value_potential: value_potential,
       is_temporary: false,
       // current_price: current_price,
-      excel_data: fileContent,
+      excel_data: excel_data,
     });
 
-    res.status(200).send({ message: '밸류에이션 저장 완료' });
+    res.status(200).send({ message: 'Successful save Valuation Data' });
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: '저장 중 에러' });
   }
 });
 
-router.post('/temporary-save', upload.single('file'), async (req, res) => {
-  /*
-        #swagger.description = 'user의 valuation 임시 저장'
-        #swagger.tags = ['Valuations']
-        #swagger.consumes = ['multipart/form-data']
-        #swagger.parameters['singleFile'] = {
-            in: 'formData',
-            type: 'file',
-            required: 'true',
-            description: '엑셀파일 업로드',
-    } */
+router.post('/temporary', async (req, res) => {
+  // #swagger.description = 'user의 valuation 임시 저장'
+  // #swagger.tags = ['Valuations']
+
   const { id } = req.query;
 
-  const { user_id, target_price, value_potential } = req.body;
-  const file = req.file;
+  const { user_id, target_price, value_potential, excel_data } = req.body;
 
-  if (!file || !user_id || !id || !target_price || !value_potential) {
-    return res.status(400).send({ message: '데이터가 비었어요' });
+  if (!excel_data || !user_id || !id) {
+    return res.status(400).send({ message: '저장을 위한 필수 항목을 확인해주세요.' });
   }
 
   try {
@@ -117,12 +82,16 @@ router.post('/temporary-save', upload.single('file'), async (req, res) => {
     });
 
     if (templateCount >= 3) {
-      return res
-        .status(400)
-        .json({ message: '임시저장 개수는 최대 3개입니다!' });
+      return res.status(400).json({ message: '임시저장 개수는 최대 3개입니다!' });
     }
 
-    const fileContent = fs.readFileSync(excelFilePath);
+    if (!target_price) {
+      target_price = 0;
+    }
+    if (!value_potential) {
+      value_potential = 0;
+    }
+
     await VALUATIONS.create({
       user_id: user_id,
       stock_id: id,
@@ -130,7 +99,7 @@ router.post('/temporary-save', upload.single('file'), async (req, res) => {
       value_potential: value_potential,
       is_temporary: true,
       // current_price: current_price,
-      excel_data: fileContent,
+      excel_data: excel_data,
     });
     res.status(200).send({ message: '임시저장 완료' });
   } catch (error) {
@@ -225,11 +194,6 @@ router.get('/download/:id', async (req, res) => {
       return res.status(404).send({ message: '템플릿 없음' });
     }
 
-    const binaryContent = valuation.excel_data;
-
-    const outputPath = path.join(__dirname, `./upload/restored_a.xlsx`);
-    fs.writeFileSync(outputPath, binaryContent);
-
     res.download(outputPath, 'restored_a.xlsx', (err) => {
       if (err) {
         res.status(500).send({ message: '파일 전송 중 에러' });
@@ -243,7 +207,7 @@ router.get('/download/:id', async (req, res) => {
   }
 });
 
-router.put('/:valuation_id', upload.single('file'), async (req, res) => {
+router.put('/:valuation_id', async (req, res) => {
   /*
         #swagger.description = 'user의 valuation 수정'
         #swagger.tags = ['Valuations']
@@ -258,9 +222,60 @@ router.put('/:valuation_id', upload.single('file'), async (req, res) => {
   const { user_id, target_price, value_potential } = req.body;
   const file = req.file;
 
-  console.log(valuation_id);
-
   if (!file || !user_id || !target_price || !value_potential) {
+    return res.status(400).send({ message: '데이터가 비었어요' });
+  }
+
+  try {
+    const existingValuation = await VALUATIONS.findOne({
+      where: {
+        valuation_id: valuation_id,
+        user_id: user_id,
+      },
+    });
+
+    if (existingValuation) {
+      await VALUATIONS.update(
+        {
+          target_price: target_price,
+          value_potential: value_potential,
+          excel_data: fileContent,
+          is_temporary: false,
+        },
+        {
+          where: {
+            valuation_id: valuation_id,
+            user_id: user_id,
+            is_temporary: existingValuation.is_temporary,
+          },
+        }
+      );
+
+      res.status(200).send({ message: '밸류에이션 업데이트 완료' });
+    } else {
+      return res.status(404).send({ message: '존재하지 않는 밸류에이션입니다.' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: '업데이트 중 에러' });
+  }
+});
+
+router.put('/:valuation_id/temporary', async (req, res) => {
+  /*
+        #swagger.description = 'user의 valuation 임시 수정'
+        #swagger.tags = ['Valuations']
+        #swagger.consumes = ['multipart/form-data']
+        #swagger.parameters['singleFile'] = {
+            in: 'formData',
+            type: 'file',
+            required: 'true',
+            description: '엑셀파일 업로드',
+    } */
+  const { valuation_id } = req.params;
+  const { user_id, target_price, value_potential } = req.body;
+
+  if (!user_id || !target_price || !value_potential) {
     return res.status(400).send({ message: '데이터가 비었어요' });
   }
 
@@ -280,90 +295,26 @@ router.put('/:valuation_id', upload.single('file'), async (req, res) => {
           target_price: target_price,
           value_potential: value_potential,
           excel_data: fileContent,
-          is_temporary: false,
+          is_temporary: true, // 명시적으로 true로 설정
         },
         {
           where: {
             valuation_id: valuation_id,
             user_id: user_id,
-            is_temporary: existingValuation.is_temporary,
+            is_temporary: existingValuation.is_temporary, // 명시적으로 true로 설정
           },
         }
       );
 
-      res.status(200).send({ message: '밸류에이션 업데이트 완료' });
+      res.status(200).send({ message: '임시저장 업데이트 완료' });
     } else {
-      return res
-        .status(404)
-        .send({ message: '존재하지 않는 밸류에이션입니다.' });
+      return res.status(404).send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).send({ message: '업데이트 중 에러' });
+    res.status(500).send({ message: '임시저장 업데이트 중 에러' });
   }
 });
-
-router.put(
-  '/:valuation_id/temporary',
-  upload.single('file'),
-  async (req, res) => {
-    /*
-        #swagger.description = 'user의 valuation 임시 수정'
-        #swagger.tags = ['Valuations']
-        #swagger.consumes = ['multipart/form-data']
-        #swagger.parameters['singleFile'] = {
-            in: 'formData',
-            type: 'file',
-            required: 'true',
-            description: '엑셀파일 업로드',
-    } */
-    const { valuation_id } = req.params;
-    const { user_id, target_price, value_potential } = req.body;
-    const file = req.file;
-
-    if (!file || !user_id || !target_price || !value_potential) {
-      return res.status(400).send({ message: '데이터가 비었어요' });
-    }
-
-    try {
-      const existingValuation = await VALUATIONS.findOne({
-        where: {
-          valuation_id: valuation_id,
-          user_id: user_id,
-        },
-      });
-
-      if (existingValuation) {
-        const fileContent = fs.readFileSync(file.path);
-
-        await VALUATIONS.update(
-          {
-            target_price: target_price,
-            value_potential: value_potential,
-            excel_data: fileContent,
-            is_temporary: true, // 명시적으로 true로 설정
-          },
-          {
-            where: {
-              valuation_id: valuation_id,
-              user_id: user_id,
-              is_temporary: existingValuation.is_temporary, // 명시적으로 true로 설정
-            },
-          }
-        );
-
-        res.status(200).send({ message: '임시저장 업데이트 완료' });
-      } else {
-        return res
-          .status(404)
-          .send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
-      }
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({ message: '임시저장 업데이트 중 에러' });
-    }
-  }
-);
 
 // 특정 valuationId에 대한 엑셀 데이터 가져오기
 router.get('/:id', async (req, res) => {
