@@ -24,8 +24,8 @@ app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 app.use('/api/auth', authRouter);
 app.use('/api/valuation', valuationRouter);
 app.use('/api/template', templateRouter);
-app.use('api/consensus', consensusRouter);
-app.use('api/search', searchRouter);
+app.use('/api/consensus', consensusRouter);
+app.use('/api/search', searchRouter);
 // app.use("/api/valuation", authenticateJWT, valuationRouter);
 
 server.listen(3000, () => {
