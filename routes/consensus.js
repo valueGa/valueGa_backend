@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { VALUATIONS, CONSENSUSES, USERS, STOCKS } = require('../models');
+const { VALUATIONS, CONSENSUSES, USERS, STOCKS, FINANCE_INFOS } = require('../models');
 const { Op } = require('sequelize');
 const { fetchCurrentStockPrice } = require('../service/getCurrentStockPrice');
 const { fetchDailyChartInfo } = require('../service/getDailyChart');
@@ -10,6 +10,7 @@ const { getAccessToken } = require('../service/getAccessToken');
 router.get('/:stock_code', async (req, res) => {
   // #swagger.description = '개별 컨센서스 조회'
   // #swagger.tags = ['Consensuses']
+
   try {
     const { stock_code } = req.params;
     const { index = 0 } = req.query; // index 쿼리 파라미터 받기, 기본값은 0
@@ -44,13 +45,13 @@ router.get('/:stock_code', async (req, res) => {
       limit: 5,
     });
 
-    const vList = {};
+    const vList = [];
 
     const positiveCount = await VALUATIONS.count({
       where: {
         stock_id: stock_code,
         value_potential: {
-          [Op.lt]: 0,
+          [Op.lt]: parseInt(0),
         },
       },
     });
@@ -59,15 +60,15 @@ router.get('/:stock_code', async (req, res) => {
       where: {
         stock_id: stock_code,
         value_potential: {
-          [Op.lt]: 0,
+          [Op.lt]: parseInt(0),
         },
       },
     });
 
     //index 값 변경 코드 작성해주기
-    let cnt = 1;
+    let cnt = 0;
     for (const valuation of valuationList) {
-      vList[`valuation${cnt}`] = {
+      vList[cnt] = {
         user_name: valuation.USER.user_name,
         past_price: valuation.current_price,
         user_target_price: valuation.target_price,
@@ -99,6 +100,14 @@ router.get('/:stock_code', async (req, res) => {
 
     const result = await fetchData(stock_code);
 
+    // FINANCE_INFOS 테이블에서 가져오기
+    const financeInfos = await FINANCE_INFOS.findOne({
+      where: {
+        stock_id: stock_code,
+      },
+      order: [['year', 'DESC']],
+    });
+
     return res.status(200).json({
       currentPrice: result['currentPrice'],
       consensusInfo: {
@@ -110,7 +119,18 @@ router.get('/:stock_code', async (req, res) => {
         upPoten: positiveCount,
         downPoten: negativeCount,
       },
-      chartInfo: result['chartInfo'],
+      financeInfos: {
+        year: financeInfos.year,
+        oi: financeInfos.oi,
+        rr: financeInfos.rr,
+        dr: financeInfos.dr,
+        ts: financeInfos.ts,
+        sr: financeInfos.sr,
+        bps: financeInfos.bps,
+        roe: financeInfos.roe,
+        evebitda: financeInfos.evebitda,
+      },
+      chartInfo: result['chartInfo'][stock_code],
     });
   } catch (err) {
     res.status(500).json({ error: '현재 서버에 오류가 발생했습니다.' });
