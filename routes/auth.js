@@ -47,17 +47,14 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: '없는 이메일' });
     }
 
-    const isValidPassword = await bcrypt.compare(
-      user_password,
-      currentUser.user_password
-    );
+    const isValidPassword = await bcrypt.compare(user_password, currentUser.user_password);
 
     if (!isValidPassword) {
       return res.status(401).json({ message: '없는 비밀번호' });
     }
 
     const token = jwt.sign({ user_id: currentUser.user_id }, SECRET_KEY, {
-      expiresIn: '1h',
+      expiresIn: '72h',
     });
     res.json({ token });
   } catch (error) {
