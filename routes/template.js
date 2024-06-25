@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { TEMPLATES, STOCKS } = require('../models');
+const { TEMPLATES } = require('../models');
 const { authenticateJWT } = require('./auth');
 const { Op } = require('sequelize');
 const DEFAULT_USER_ID = 1;
@@ -73,14 +73,19 @@ router.get('/:template_id', authenticateJWT, async (req, res) => {
   //자기 템플릿이 아닌 경우에는 호출 불가능.
   console.log('유저 번호', userId);
   try {
-    const template = await TEMPLATES.findOne({
+    const existingTemplate = await TEMPLATES.findOne({
       where: {
         template_id: parseInt(template_id),
         user_id: userId || DEFAULT_USER_ID,
       },
     });
 
-    res.status(200).json(template);
+    if (!existingTemplate) {
+      return res.status(404).send({ message: '존재하지 않는 템플릿 입니다.' });
+    }
+
+    res.status(200).json(existingTemplate);
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: '템플릿 호출 실패' });

@@ -3,16 +3,17 @@ const router = express.Router();
 
 const { VALUATIONS, FINANCE_INFOS, STOCKS } = require('../models');
 const { authenticateJWT } = require('./auth');
-
 const { Op } = require('sequelize');
+const generateInitYears = require('../service/generateInitYears');
 
-router.post('/init', async (req, res) => {
+router.get('/init', async (req, res) => {
   /* 
     #swagger.description = 'valuation 생성시 3개년 데이터 가져오기'
     #swagger.tags = ['Valuations']
   */
   try {
-    const { stock_id, years } = req.body;
+    const { stock_id, start_year } = req.query;
+    let years = generateInitYears(start_year);
 
     const financeInfos = await FINANCE_INFOS.findAll({
       where: {
@@ -23,9 +24,18 @@ router.post('/init', async (req, res) => {
       },
     });
 
+    const stock = await STOCKS.findOne({
+      where: {
+        stock_id: stock_id,
+      },
+    });
+
     const response = {};
     financeInfos.forEach((info) => {
-      response[info.year] = info;
+      response[info.year] = {
+        ...info.dataValues,
+        stock_name: stock.stock_name,
+      };
     });
 
     res.status(200).json(response);
@@ -73,7 +83,9 @@ router.post('/temporary', async (req, res) => {
   const { user_id, target_price, value_potential, excel_data } = req.body;
 
   if (!excel_data || !user_id || !id) {
-    return res.status(400).send({ message: '저장을 위한 필수 항목을 확인해주세요.' });
+    return res
+      .status(400)
+      .send({ message: '저장을 위한 필수 항목을 확인해주세요.' });
   }
 
   try {
@@ -82,7 +94,9 @@ router.post('/temporary', async (req, res) => {
     });
 
     if (templateCount >= 3) {
-      return res.status(400).json({ message: '임시저장 개수는 최대 3개입니다!' });
+      return res
+        .status(400)
+        .json({ message: '임시저장 개수는 최대 3개입니다!' });
     }
 
     if (!target_price) {
@@ -238,7 +252,9 @@ router.put('/:valuation_id', async (req, res) => {
 
       res.status(200).send({ message: '밸류에이션 업데이트 완료' });
     } else {
-      return res.status(404).send({ message: '존재하지 않는 밸류에이션입니다.' });
+      return res
+        .status(404)
+        .send({ message: '존재하지 않는 밸류에이션입니다.' });
     }
   } catch (error) {
     console.log(error);
@@ -277,7 +293,9 @@ router.put('/temporary/:valuation_id', async (req, res) => {
 
       res.status(200).send({ message: '임시저장 업데이트 완료' });
     } else {
-      return res.status(404).send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
+      return res
+        .status(404)
+        .send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
     }
   } catch (error) {
     console.log(error);
