@@ -5,6 +5,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerFile = require('./swagger/swagger-output');
 const valuationRouter = require('./routes/valuation');
 const templateRouter = require('./routes/template');
+const userRouter = require('./routes/user');
 const authRouter = require('./routes/auth').default;
 const consensusRouter = require('./routes/consensus');
 const searchRouter = require('./routes/search');
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Hello valueGa!' });
 });
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/valuation', valuationRouter);
 app.use('/api/template', templateRouter);
