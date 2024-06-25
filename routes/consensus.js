@@ -10,7 +10,7 @@ const { getAccessToken } = require('../service/getAccessToken');
 router.get('/:stock_code', async (req, res) => {
   // #swagger.description = '개별 컨센서스 조회'
   // #swagger.tags = ['Consensuses']
-  console.log('요청 왔음');
+
   try {
     const { stock_code } = req.params;
     const { index = 0 } = req.query; // index 쿼리 파라미터 받기, 기본값은 0
