@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { TEMPLATES } = require('../models');
 const { authenticateJWT } = require('./auth');
+const { Op } = require('sequelize');
+const DEFAULT_USER_ID = 1;
 
 router.get('/', authenticateJWT, async (req, res) => {
   // #swagger.description = '개인 템플릿 조회'
@@ -10,15 +12,38 @@ router.get('/', authenticateJWT, async (req, res) => {
 
   try {
     const template = await TEMPLATES.findAll({
-      where: { user_id: user_id },
+      where: {
+        [Op.or]: [{ user_id: user_id }, { user_id: DEFAULT_USER_ID }],
+      },
+      order: [['createdAt', 'DESC']], // CreatedAt 기준으로 오름차순 정렬
     });
-    return res.status(200).json(template);
+    res.status(200).json(template);
   } catch (error) {
-    return res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    console.log(error);
+    res.status(500).json({ error: '서버 오류가 발생했습니다.' });
   }
 });
 
-router.post('/', async (req, res) => {
+router.get('/my', authenticateJWT, async (req, res) => {
+  // #swagger.description = '개인 템플릿 조회'
+  // #swagger.tags = ['Templates']
+  const user_id = req.user.user_id;
+
+  try {
+    const template = await TEMPLATES.findAll({
+      where: {
+        user_id: user_id,
+      },
+      order: [['createdAt', 'DESC']], // CreatedAt 기준으로 오름차순 정렬
+    });
+    res.status(200).json(template);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+  }
+});
+
+router.post('/', authenticateJWT, async (req, res) => {
   //  #swagger.description = '템플릿한 내용을 저장'
   //  #swagger.tags = ['Templates']
 
@@ -37,17 +62,21 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/:template_id', async (req, res) => {
+router.get('/:template_id', authenticateJWT, async (req, res) => {
   /* 
     #swagger.description = '템플릿 불러오기'
     #swagger.tags = ['Templates']
   */
   const { template_id } = req.params;
 
+  const userId = req.user.user_id;
+  //자기 템플릿이 아닌 경우에는 호출 불가능.
+  console.log('유저 번호', userId);
   try {
     const existingTemplate = await TEMPLATES.findOne({
       where: {
         template_id: parseInt(template_id),
+        user_id: userId || DEFAULT_USER_ID,
       },
     });
 
@@ -56,9 +85,10 @@ router.get('/:template_id', async (req, res) => {
     }
 
     res.status(200).json(existingTemplate);
+    
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: '템플릿화 실패' });
+    res.status(500).json({ message: '템플릿 호출 실패' });
   }
 });
 
