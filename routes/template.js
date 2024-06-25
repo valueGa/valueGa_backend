@@ -71,12 +71,15 @@ router.get('/:template_id', authenticateJWT, async (req, res) => {
 
   const userId = req.user.user_id;
   //자기 템플릿이 아닌 경우에는 호출 불가능.
-  console.log('유저 번호', userId);
   try {
     const existingTemplate = await TEMPLATES.findOne({
       where: {
-        template_id: parseInt(template_id),
-        user_id: userId || DEFAULT_USER_ID,
+        [Op.and]: [
+          { template_id: template_id },
+          {
+            [Op.or]: [{ user_id: userId }, { user_id: DEFAULT_USER_ID }],
+          },
+        ],
       },
     });
 
@@ -85,7 +88,6 @@ router.get('/:template_id', authenticateJWT, async (req, res) => {
     }
 
     res.status(200).json(existingTemplate);
-    
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: '템플릿 호출 실패' });
@@ -105,7 +107,7 @@ router.put('/:template_id', authenticateJWT, async (req, res) => {
       where: { template_id: template_id, user_id: user_id },
     });
 
-    if (!template_id) {
+    if (!template) {
       //수정하려는 템플릿이 없는 경우
       return res.status(404).send({ error: '수정 권한이 없는 템플릿 입니다.' });
     }
@@ -113,11 +115,11 @@ router.put('/:template_id', authenticateJWT, async (req, res) => {
     await template.update({
       excel_data: excel_data,
     });
-    console.log('성공');
+
     res.status(200).send({ message: '정상적으로 수정되었습니다.' });
   } catch (error) {
-    console.log(error);
-    res.status(500).send({ error: '수저중 오류가 발생하였습니다.' });
+    console.log('Error', error);
+    res.status(500).send({ error: '수정중 오류가 발생하였습니다.' });
   }
 });
 
