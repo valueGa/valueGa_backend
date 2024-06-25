@@ -45,7 +45,7 @@ router.get('/init', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   // #swagger.description = 'user의 valuation 저장'
   // #swagger.tags = ['Valuations']
 
@@ -74,7 +74,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/temporary', async (req, res) => {
+router.post('/temporary', authenticateJWT, async (req, res) => {
   // #swagger.description = 'user의 valuation 임시 저장'
   // #swagger.tags = ['Valuations']
 
@@ -133,7 +133,7 @@ router.delete('/:valuation_id', authenticateJWT, async (req, res) => {
             description: '삭제할 valuation의 ID',
         } 
     */
-  const { valuation_id } = req.body;
+  const { valuation_id } = req.params;
 
   if (!valuation_id) {
     return res.status(400).send({ message: 'valuation_id가 필요' });
@@ -221,7 +221,7 @@ router.get('/download/:id', async (req, res) => {
   }
 });
 
-router.put('/:valuation_id', async (req, res) => {
+router.put('/:valuation_id', authenticateJWT, async (req, res) => {
   /*
         #swagger.description = 'user의 valuation 수정'
         #swagger.tags = ['Valuations']
@@ -262,7 +262,7 @@ router.put('/:valuation_id', async (req, res) => {
   }
 });
 
-router.put('/temporary/:valuation_id', async (req, res) => {
+router.put('/temporary/:valuation_id', authenticateJWT, async (req, res) => {
   /*
         #swagger.description = 'user의 valuation 임시 수정'
         #swagger.tags = ['Valuations']
@@ -304,7 +304,7 @@ router.put('/temporary/:valuation_id', async (req, res) => {
 });
 
 // 특정 valuationId에 대한 엑셀 데이터 가져오기
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   /*
       #swagger.description = '특정 valuationId에 대한 엑셀 데이터 가져오기'
       #swagger.tags = ['Valuations']
@@ -345,5 +345,7 @@ router.get('/:id', async (req, res) => {
     res.status(500).send({ message: '데이터를 가져오는 중 에러 발생' });
   }
 });
+
+router.get('/mypage/:id', authenticateJWT, async (req, res) => {});
 
 module.exports = router;
