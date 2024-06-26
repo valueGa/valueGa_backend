@@ -5,6 +5,7 @@ const { VALUATIONS, FINANCE_INFOS, STOCKS } = require('../models');
 const { authenticateJWT } = require('./auth');
 const { Op } = require('sequelize');
 const generateInitYears = require('../service/generateInitYears');
+const { fetchStockPrice } = require('../service/fetchData');
 
 router.get('/init', async (req, res) => {
   /* 
@@ -51,19 +52,22 @@ router.post('/', authenticateJWT, async (req, res) => {
 
   const { id } = req.query;
 
-  const { user_id, target_price, value_potential, excel_data } = req.body;
+  const { user_id, target_price, value_potential, excel_data, stock_id } = req.body;
 
-  if (!excel_data || !user_id || !id || !target_price || !value_potential) {
+  if (!excel_data || !user_id || !id || !target_price || !value_potential || !stock_id) {
     return res.status(400).send({ message: '데이터가 비었어요' });
   }
+
   try {
+    const currentPrice = await fetchStockPrice(stock_id);
+
     await VALUATIONS.create({
       user_id: user_id,
       stock_id: id,
       target_price: target_price,
       value_potential: value_potential,
       is_temporary: false,
-      // current_price: current_price,
+      current_price: currentPrice,
       excel_data: excel_data,
     });
 
@@ -80,12 +84,10 @@ router.post('/temporary', authenticateJWT, async (req, res) => {
 
   const { id } = req.query;
 
-  const { user_id, target_price, value_potential, excel_data } = req.body;
+  const { user_id, target_price, value_potential, excel_data, stock_id } = req.body;
 
   if (!excel_data || !user_id || !id) {
-    return res
-      .status(400)
-      .send({ message: '저장을 위한 필수 항목을 확인해주세요.' });
+    return res.status(400).send({ message: '저장을 위한 필수 항목을 확인해주세요.' });
   }
 
   try {
@@ -94,9 +96,7 @@ router.post('/temporary', authenticateJWT, async (req, res) => {
     });
 
     if (templateCount >= 3) {
-      return res
-        .status(400)
-        .json({ message: '임시저장 개수는 최대 3개입니다!' });
+      return res.status(400).json({ message: '임시저장 개수는 최대 3개입니다!' });
     }
 
     if (!target_price) {
@@ -106,13 +106,15 @@ router.post('/temporary', authenticateJWT, async (req, res) => {
       value_potential = 0;
     }
 
+    const currentPrice = await fetchStockPrice(stock_id);
+
     await VALUATIONS.create({
       user_id: user_id,
       stock_id: id,
       target_price: target_price,
       value_potential: value_potential,
       is_temporary: true,
-      // current_price: current_price,
+      current_price: currentPrice,
       excel_data: excel_data,
     });
     res.status(200).send({ message: '임시저장 완료' });
@@ -252,9 +254,7 @@ router.put('/:valuation_id', authenticateJWT, async (req, res) => {
 
       res.status(200).send({ message: '밸류에이션 업데이트 완료' });
     } else {
-      return res
-        .status(404)
-        .send({ message: '존재하지 않는 밸류에이션입니다.' });
+      return res.status(404).send({ message: '존재하지 않는 밸류에이션입니다.' });
     }
   } catch (error) {
     console.log(error);
@@ -293,9 +293,7 @@ router.put('/temporary/:valuation_id', authenticateJWT, async (req, res) => {
 
       res.status(200).send({ message: '임시저장 업데이트 완료' });
     } else {
-      return res
-        .status(404)
-        .send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
+      return res.status(404).send({ message: '존재하지 않는 임시 밸류에이션입니다.' });
     }
   } catch (error) {
     console.log(error);
