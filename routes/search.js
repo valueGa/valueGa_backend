@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   // #swagger.tags= ['Search']
 
   try {
-    const { searchWord } = req.query;
+    let { searchWord } = req.query;
 
     let searchList = await STOCKS.findAll({
       where: {
@@ -51,9 +51,13 @@ router.get('/', async (req, res) => {
       searchList = [...searchList, ...additionalList];
     }
     searchResult = [];
+    const checkMap = new Map();
 
     for (const word of searchList) {
-      searchResult.push([word.stock_name, word.stock_id]);
+      if (!checkMap.has(word.stock_name)) {
+        searchResult.push([word.stock_name, word.stock_id]);
+        checkMap.set(word.stock_name, word.stock_id);
+      }
     }
 
     res.status(200).json({ searchList: searchResult });
