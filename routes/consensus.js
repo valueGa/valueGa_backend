@@ -2,9 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { VALUATIONS, CONSENSUSES, USERS, STOCKS, FINANCE_INFOS } = require('../models');
 const { Op } = require('sequelize');
-const { fetchCurrentStockPrice } = require('../service/getCurrentStockPrice');
-const { fetchDailyChartInfo } = require('../service/getDailyChart');
-const { getAccessToken } = require('../service/getAccessToken');
+const { fetchChartNPrice, fetchStockPrice } = require('../service/fetchData');
 
 // 개별 컨센서스 조회
 router.get('/:stock_code', async (req, res) => {
@@ -78,27 +76,7 @@ router.get('/:stock_code', async (req, res) => {
       cnt++;
     }
 
-    async function fetchData(stock_code, retryCount = 0) {
-      try {
-        const currentPrice = await fetchCurrentStockPrice(stock_code);
-        const chartInfo = await fetchDailyChartInfo(stock_code);
-        return { currentPrice, chartInfo };
-      } catch (err) {
-        if (err.response && err.response.data && err.response.data.msg_cd === 'EGW00121') {
-          // token 토큰 만료로 인한 오류인 경우 갱신하고 재실행
-          if (retryCount < 1) {
-            await getAccessToken();
-            return await fetchData(stock_code, retryCount + 1);
-          } else {
-            throw err;
-          }
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    const result = await fetchData(stock_code);
+    const result = await fetchChartNPrice(stock_code);
 
     // FINANCE_INFOS 테이블에서 가져오기
     const financeInfos = await FINANCE_INFOS.findOne({
@@ -142,39 +120,14 @@ router.get('/', async (req, res) => {
   // #swagger.description = '종합 컨센서스 조회'
   // #swagger.tags = ['Consensuses']
 
-  // 현재가 받아오기
-  async function fetchStockPrice(stock_code, retryCount = 0) {
-    try {
-      const currentPrice = await fetchCurrentStockPrice(stock_code);
-      return currentPrice;
-    } catch (err) {
-      if (
-        err.response &&
-        err.response.data &&
-        (err.response.data.msg_cd === 'EGW00121' || err.response.data.msg_cd === 'EGW00123')
-      ) {
-        // token 토큰 만료로 인한 오류인 경우 갱신하고 재실행
-        if (retryCount < 1) {
-          console.log('재발급 요청');
-          await getAccessToken();
-          return await fetchStockPrice(stock_code, retryCount + 1);
-        } else {
-          throw err;
-        }
-      } else {
-        throw err;
-      }
-    }
-  }
-
   try {
     const { index = 0 } = req.query;
 
     const overvaluedList = await CONSENSUSES.findAll({
       where: {
-        value_potential: { [Op.not]: null },
+        value_potential: { [Op.lt]: 0 },
       },
-      order: [['value_potential', 'DESC']],
+      order: [['value_potential', 'ASC']],
       offset: parseInt(index),
       limit: 5,
     });
@@ -205,9 +158,9 @@ router.get('/', async (req, res) => {
 
     const undervaluedList = await CONSENSUSES.findAll({
       where: {
-        value_potential: { [Op.not]: null },
+        value_potential: { [Op.gt]: 0 },
       },
-      order: [['value_potential', 'ASC']],
+      order: [['value_potential', 'DESC']],
       offset: parseInt(index),
       limit: 5,
     });
@@ -236,7 +189,7 @@ router.get('/', async (req, res) => {
       where: {
         value_potential: { [Op.not]: null },
         value_potential: {
-          [Op.lt]: 0,
+          [Op.gt]: 0,
         },
       },
     });
@@ -245,7 +198,7 @@ router.get('/', async (req, res) => {
       where: {
         value_potential: { [Op.not]: null },
         value_potential: {
-          [Op.gt]: 0,
+          [Op.lt]: 0,
         },
       },
     });
