@@ -6,6 +6,7 @@ const { authenticateJWT } = require('./auth');
 const { Op } = require('sequelize');
 const generateInitYears = require('../service/generateInitYears');
 const { fetchStockPrice } = require('../service/fetchData');
+const valuation = require('../models/valuation');
 
 router.get('/init', async (req, res) => {
   /* 
@@ -61,7 +62,7 @@ router.post('/', authenticateJWT, async (req, res) => {
   try {
     const currentPrice = await fetchStockPrice(stock_id);
 
-    await VALUATIONS.create({
+    const newValuation = await VALUATIONS.create({
       user_id: user_id,
       stock_id: id,
       target_price: target_price,
@@ -71,7 +72,9 @@ router.post('/', authenticateJWT, async (req, res) => {
       excel_data: excel_data,
     });
 
-    res.status(200).send({ message: 'Successful save Valuation Data' });
+    const newValuationId = newValuation.dataValues.valuation_id;
+
+    res.status(200).json(newValuationId);
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: '저장 중 에러' });
@@ -108,7 +111,7 @@ router.post('/temporary', authenticateJWT, async (req, res) => {
 
     const currentPrice = await fetchStockPrice(stock_id);
 
-    await VALUATIONS.create({
+    const newValuation = await VALUATIONS.create({
       user_id: user_id,
       stock_id: id,
       target_price: target_price,
@@ -117,7 +120,10 @@ router.post('/temporary', authenticateJWT, async (req, res) => {
       current_price: currentPrice,
       excel_data: excel_data,
     });
-    res.status(200).send({ message: '임시저장 완료' });
+
+    const newValuationId = newValuation.dataValues.valuation_id;
+
+    res.status(200).json(newValuationId);
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: '임시저장 중 에러' });
@@ -196,30 +202,6 @@ router.get('/valuations', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: '밸류에이션 정보 가져오기 중 에러' });
-  }
-});
-
-router.get('/download/:id', async (req, res) => {
-  // #swagger.description = 'user의 Valuation 다운로드'
-  // #swagger.tags = ['Valuations']
-  try {
-    const id = req.params.id;
-    const valuation = await VALUATIONS.findByPk(id);
-
-    if (!valuation) {
-      return res.status(404).send({ message: '템플릿 없음' });
-    }
-
-    res.download(outputPath, 'restored_a.xlsx', (err) => {
-      if (err) {
-        res.status(500).send({ message: '파일 전송 중 에러' });
-      } else {
-        console.log('파일 전송 완료');
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: '파일 다운로드 중 에러' });
   }
 });
 
@@ -343,7 +325,5 @@ router.get('/:id', authenticateJWT, async (req, res) => {
     res.status(500).send({ message: '데이터를 가져오는 중 에러 발생' });
   }
 });
-
-router.get('/mypage/:id', authenticateJWT, async (req, res) => {});
 
 module.exports = router;
