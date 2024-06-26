@@ -172,9 +172,9 @@ router.get('/', async (req, res) => {
 
     const overvaluedList = await CONSENSUSES.findAll({
       where: {
-        value_potential: { [Op.not]: null },
+        value_potential: { [Op.lt]: 0 },
       },
-      order: [['value_potential', 'DESC']],
+      order: [['value_potential', 'ASC']],
       offset: parseInt(index),
       limit: 5,
     });
@@ -205,9 +205,9 @@ router.get('/', async (req, res) => {
 
     const undervaluedList = await CONSENSUSES.findAll({
       where: {
-        value_potential: { [Op.not]: null },
+        value_potential: { [Op.gt]: 0 },
       },
-      order: [['value_potential', 'ASC']],
+      order: [['value_potential', 'DESC']],
       offset: parseInt(index),
       limit: 5,
     });
@@ -236,7 +236,7 @@ router.get('/', async (req, res) => {
       where: {
         value_potential: { [Op.not]: null },
         value_potential: {
-          [Op.lt]: 0,
+          [Op.gt]: 0,
         },
       },
     });
@@ -245,7 +245,7 @@ router.get('/', async (req, res) => {
       where: {
         value_potential: { [Op.not]: null },
         value_potential: {
-          [Op.gt]: 0,
+          [Op.lt]: 0,
         },
       },
     });
