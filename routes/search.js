@@ -11,6 +11,10 @@ router.get('/', async (req, res) => {
   try {
     let { searchWord } = req.query;
 
+    if (/[a-zA-Z]/.test(searchWord)) {
+      searchWord = searchWord.toUpperCase();
+    }
+
     let searchList = await STOCKS.findAll({
       where: {
         [Op.or]: [
