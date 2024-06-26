@@ -1,26 +1,35 @@
-const dotenv = require('dotenv');
-const path = require('path');
 const express = require('express');
 const http = require('http');
+
 const swaggerUi = require('swagger-ui-express');
 const swaggerFile = require('./swagger/swagger-output');
+const valuationRouter = require('./routes/valuation');
+const templateRouter = require('./routes/template');
+const userRouter = require('./routes/user');
+const authRouter = require('./routes/auth').default;
+const consensusRouter = require('./routes/consensus');
+const searchRouter = require('./routes/search');
 
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-const db = require('./models');
-
-db.sequelize.sync({ force: true }).then(() => {
-    console.log('DB 연결 완료');
-});
+// const { authenticateJWT } = require("./routes/auth");
 
 const app = express();
 const server = http.createServer(app);
 
-app.get('/', (req, res) => {
-    res.json({ message: 'Hello valueGa!' });
-});
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+app.get('/', (req, res) => {
+  res.json({ message: 'Hello valueGa!' });
+});
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+app.use('/api/user', userRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/valuation', valuationRouter);
+app.use('/api/template', templateRouter);
+app.use('/api/consensus', consensusRouter);
+app.use('/api/search', searchRouter);
+// app.use("/api/valuation", authenticateJWT, valuationRouter);
 
 server.listen(3000, () => {
-    console.log('Server is running on port 3000.');
+  console.log('Server is running on port 3000.');
 });
