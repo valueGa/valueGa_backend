@@ -19,10 +19,6 @@ module.exports = (sequelize, Sequelize) => {
       },
       excel_data: {
         type: Sequelize.JSON,
-        get() {
-          const data = this.getDataValue('excel_data');
-          return data ? JSON.parse(data.toString()) : null;
-        },
       },
     },
     {
