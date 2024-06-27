@@ -24,8 +24,41 @@ router.get('/:stock_code', async (req, res) => {
       },
     });
 
+    const result = await fetchChartNPrice(stock_code);
+
+    // FINANCE_INFOS 테이블에서 가져오기
+    const financeInfos = await FINANCE_INFOS.findOne({
+      where: {
+        stock_id: stock_code,
+      },
+      order: [['year', 'DESC']],
+    });
+
     if (!consensusInfo) {
-      return res.status(404).json({ error: '조회하신 기업의 정보는 제공하지 않습니다.' });
+      return res.status(200).json({
+        currentPrice: result['currentPrice'],
+        consensusInfo: {
+          target_price: null,
+          value_potential: null,
+        },
+        valuationList: null,
+        ratio: {
+          upPoten: null,
+          downPoten: null,
+        },
+        financeInfos: {
+          year: financeInfos.year,
+          oi: financeInfos.oi,
+          rr: financeInfos.rr,
+          dr: financeInfos.dr,
+          ts: financeInfos.ts,
+          sr: financeInfos.sr,
+          bps: financeInfos.bps,
+          roe: financeInfos.roe,
+          evebitda: financeInfos.evebitda,
+        },
+        chartInfo: result['chartInfo'][stock_code],
+      });
     }
 
     //유저 개별 Valuation 목록 조회
@@ -75,16 +108,6 @@ router.get('/:stock_code', async (req, res) => {
       };
       cnt++;
     }
-
-    const result = await fetchChartNPrice(stock_code);
-
-    // FINANCE_INFOS 테이블에서 가져오기
-    const financeInfos = await FINANCE_INFOS.findOne({
-      where: {
-        stock_id: stock_code,
-      },
-      order: [['year', 'DESC']],
-    });
 
     return res.status(200).json({
       currentPrice: result['currentPrice'],
