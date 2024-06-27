@@ -56,7 +56,9 @@ router.post('/', authenticateJWT, async (req, res) => {
       excel_data: excel_data,
     });
 
-    res.status(200).json(newTemplate);
+    const newTemplateId = newTemplate.dataValues.template_id;
+
+    res.status(200).json(newTemplateId);
   } catch (error) {
     res.status(500).json({ message: '템플릿화 실패' });
   }
